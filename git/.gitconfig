@@ -1,0 +1,26 @@
+[user]
+	name = Mathew
+	email = miacone@hey.com
+[alias]
+	co = checkout
+	br = branch
+	ci = commit
+	st = status
+	amend = commit --amend --no-edit
+[core]
+	excludesfile = C:/Users/matia/.gitignore_global
+[pull]
+	# rebase = true
+[credential "https://github.com"]
+	helper = 
+	helper = !/usr/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper = 
+	helper = !/usr/bin/gh auth git-credential
+[init]
+	defaultBranch = master
+[secrets]
+	patterns = ^[^\\s]*_ID=[^\\s]*$
+	patterns = ^[^\\s]*_KEY=[^\\s]*$
+	patterns = ^[^\\s]*_TOKEN=[^\\s]*$
+	patterns = ^[^\\s]*_SECRET=[^\\s]*$
