@@ -4,7 +4,11 @@ cpo() {
     echo "Error: No input piped to cpo" >&2
     return 1
   else
-    wl-copy
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+      pbcopy
+    else
+      wl-copy
+    fi
     echo "Content copied to clipboard" >&2
   fi
 }

@@ -54,7 +54,6 @@ Feature name: $ARGUMENTS
 
 6. **Create empty progress.txt** in the same directory
 
-7. **Commit the changes** - After creating the plan, stage, commit, and submit:
-   ```bash
-   gt add .ralph/features/<feature-name>/ && gt modify && gt submit --no-interactive
-   ```
+7. **Commit the changes** - After creating the plan, check which branch you're on:
+   - **If on a Graphite branch** (not `develop` or `main`): Use `/graphite:modify` to amend the current branch, then `/graphite:submit` to push
+   - **If on `develop`**: Use `/graphite:commit` to commit directly to develop (it will auto-push)

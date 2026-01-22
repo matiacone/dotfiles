@@ -13,14 +13,14 @@ export FIZZY_ACCOUNT="${FIZZY_ACCOUNT:-}"
 
 # PATH additions
 export BUN_INSTALL="$HOME/.bun"
-export PNPM_HOME="/home/mathew/.local/share/pnpm"
+export PNPM_HOME="$HOME/.local/share/pnpm"
 
 export PATH="$BUN_INSTALL/bin:$PATH"
 export PATH="$HOME/.slack/bin:$PATH"
-export PATH="$PATH:/home/mathew/.turso"
-export PATH="/home/mathew/.opencode/bin:$PATH"
+export PATH="$PATH:$HOME/.turso"
+export PATH="$HOME/.opencode/bin:$PATH"
 export PATH="$HOME/.local/share/gem/ruby/3.4.0/bin:$PATH"
-export PATH="/home/mathew/.local/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
 
 case ":$PATH:" in
   *":$PNPM_HOME:"*) ;;

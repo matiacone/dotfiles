@@ -26,7 +26,7 @@ alias ma='gt modify -a && gt submit --no-interactive -p'
 alias ga='function _ca(){ gt create -am "$*" && gt submit --no-interactive -p; }; _ca'
 alias re='lumen diff develop..'
 alias res='lumen diff develop.. --stacked'
-alias red='lumen diff $(gt branch info --no-interactive 2>/dev/null | grep -oP "Parent: \K.*")..'
+alias red='lumen diff $(gt branch info --no-interactive 2>/dev/null | grep -o "Parent: .*" | sed "s/Parent: //")..'
 alias devin-review='bunx devin-review "$(gh pr view --json url -q .url)"'
 
 # Bun
@@ -40,4 +40,8 @@ alias ssh-hobby='ssh -i ~/.ssh/id_deal_deploy miacone@$SSH_HOBBY_HOST'
 alias ssh-dd='ssh -i ~/.ssh/id_deal_deploy miacone@$SSH_DD_HOST'
 
 # System
-alias memhogs='ps aux --sort=-%mem | head -15'
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  alias memhogs='ps aux -m | head -15'
+else
+  alias memhogs='ps aux --sort=-%mem | head -15'
+fi

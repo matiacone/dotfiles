@@ -1,6 +1,10 @@
 -- Options are automatically loaded before lazy.nvim startup
 -- Default options that are always set: https://github.com/LazyVim/LazyVim/blob/main/lua/lazyvim/config/options.lua
 -- Add any additional options here
+
+-- Use inline ghost text for AI suggestions instead of completion menu
+vim.g.ai_cmp = false
+
 vim.opt.relativenumber = false
 vim.opt.autoread = true
 
