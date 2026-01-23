@@ -23,6 +23,13 @@ return {
 	},
 	keys = {
 		{
+			"<leader><space>",
+			function()
+				Snacks.picker.files({ cwd = vim.fn.getcwd() })
+			end,
+			desc = "Find Files (cwd)",
+		},
+		{
 			"<leader>bd",
 			function()
 				Snacks.bufdelete()
