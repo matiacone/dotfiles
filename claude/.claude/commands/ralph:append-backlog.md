@@ -3,18 +3,18 @@ allowed-tools: Read, Edit, Bash(gt add:*), Bash(gt modify:*), Bash(gt submit:*)
 description: Append tasks to the Ralph backlog
 ---
 
-Append tasks to the Ralph backlog at `.ralph/backlog.json`.
-
-Tasks to add: $ARGUMENTS
+Append tasks to the Ralph backlog at `.ralph/backlog.json` based on our conversation.
 
 ## Instructions
 
 1. **Read** the current `.ralph/backlog.json` file first
 
-2. **Parse the arguments** - The user may specify tasks as:
-   - A single task description
-   - Multiple tasks separated by newlines or semicolons
-   - A numbered list
+2. **Analyze the conversation history** - Review our discussion to identify:
+   - Tasks the user mentioned wanting to do
+   - Work items discovered during our conversation
+   - Follow-up tasks or improvements discussed
+   - Bug fixes or features that came up
+   - Any TODOs or "we should also" items mentioned
 
 3. **For each task**, create a task object:
    ```json
