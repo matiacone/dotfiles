@@ -5,3 +5,4 @@ done
 
 # Source .env file
 [[ -f ~/.env ]] && source ~/.env
+export PATH="$HOME/.npm-global/bin:$PATH"
