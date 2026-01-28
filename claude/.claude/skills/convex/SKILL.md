@@ -47,6 +47,14 @@ Code layout:
 - Auth does NOT propagate - use internal functions
 - Use function references (`internal.file.fn`), not the function itself
 
+### Migrations
+- Install `@convex-dev/migrations` component
+- Modify schema to allow old+new values → run migration → update schema to require new values
+- Use `migrations.define({ table, migrateOne })` to define
+- Return object from `migrateOne` for auto-patch shorthand
+- Run via CLI: `npx convex run migrations:run '{fn: "migrations:myMigration"}'`
+- Use `dryRun: true` to validate before committing
+
 ### React Hooks
 - **Never** call hooks conditionally
 - Use `"skip"` pattern: `useQuery(api.foo, condition ? args : "skip")`
@@ -70,6 +78,7 @@ Load these as needed based on the task:
 | Actions & HTTP | [actions-http.md](references/actions-http.md) | Actions, HTTP endpoints, external APIs |
 | Scheduling | [scheduling.md](references/scheduling.md) | Cron jobs, scheduled functions |
 | File Storage | [file-storage.md](references/file-storage.md) | Uploads, downloads, file metadata |
+| Migrations | [migrations.md](references/migrations.md) | Online migrations, schema changes, data transformations |
 | Limits | [limits.md](references/limits.md) | Size limits, time limits, design constraints |
 | Environment Variables | [env-secrets.md](references/env-secrets.md) | Secrets, API keys, environment setup |
 | React Patterns | [react-patterns.md](references/react-patterns.md) | useQuery, useMutation, skip pattern |
