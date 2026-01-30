@@ -25,7 +25,7 @@ return {
 		{
 			"<leader><space>",
 			function()
-				Snacks.picker.files({ cwd = vim.fn.getcwd() })
+				Snacks.picker.files({ cwd = vim.fn.getcwd(), hidden = true })
 			end,
 			desc = "Find Files (cwd)",
 		},
