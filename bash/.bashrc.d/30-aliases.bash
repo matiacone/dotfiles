@@ -8,7 +8,7 @@ alias da2="cd ~/creations/deal-deploy-2/apps/deal-deploy"
 alias de="cd ~/creations/deal-deploy/packages/backend"
 alias de2="cd ~/creations/deal-deploy-2/packages/backend"
 alias me="cd ~/creations/me/"
-alias bc="n ~/.bashrc"
+alias bc="n ~/dotfiles/bash/"
 alias brc="source ~/.bashrc"
 
 # Git
