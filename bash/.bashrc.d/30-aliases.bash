@@ -45,3 +45,6 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 else
   alias memhogs='ps aux --sort=-%mem | head -15'
 fi
+
+# Games
+alias zombies='cd ~/clawd/games/zombie-survival && (python3 -m http.server 8080 &) && sleep 1 && xdg-open http://localhost:8080/ && echo "🧟 Zombie Survival running at http://localhost:8080"'
