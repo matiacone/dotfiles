@@ -1,0 +1,1 @@
+Use the AGENTS.md files to track learnings, best practices, and user preferences for each repo. Consider which AGENTS.md to adjust based on where the lesson learned is most relevent (i.e. root vs. backend vs. frontend, etc.).
