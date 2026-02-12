@@ -1,4 +1,5 @@
 ---
+name: check-types
 description: Run TypeScript type checking and fix any type errors found
 ---
 

@@ -1,4 +1,5 @@
 ---
+name: create-mcp
 description: Set up an MCP server with comprehensive configuration instructions
 ---
 
@@ -121,7 +122,7 @@ claude mcp add --transport sse <server-name> <url>
 ```
 
 **HTTP servers:**
-```bash  
+```bash
 claude mcp add --transport http <server-name> <url>
 # Example: claude mcp add --transport http secure-server https://api.example.com/mcp --header "Authorization: Bearer your-token"
 ```
@@ -130,7 +131,7 @@ claude mcp add --transport http <server-name> <url>
 
 Use the `-s` flag to specify scope:
 - `local` (default): Available only to you in current project
-- `project`: Shared with team via .mcp.json file  
+- `project`: Shared with team via .mcp.json file
 - `user`: Available to you across all projects
 
 ```bash
@@ -157,7 +158,7 @@ MCP_TIMEOUT=10000 claude mcp add server-name command
 # List all configured servers
 claude mcp list
 
-# Get details for specific server  
+# Get details for specific server
 claude mcp get <server-name>
 
 # Remove a server
@@ -213,7 +214,7 @@ claude mcp serve
 Then add to other MCP clients with config:
 ```json
 {
-  "command": "claude", 
+  "command": "claude",
   "args": ["mcp", "serve"],
   "env": {}
 }

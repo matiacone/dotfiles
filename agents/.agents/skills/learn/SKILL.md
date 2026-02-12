@@ -1,4 +1,5 @@
 ---
+name: learn
 description: Review conversation for lessons learned and update AGENTS.md
 ---
 

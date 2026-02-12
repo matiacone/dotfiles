@@ -1,4 +1,5 @@
 ---
+name: graphite-commit
 description: Add a new commit to current branch (instead of amending)
 ---
 

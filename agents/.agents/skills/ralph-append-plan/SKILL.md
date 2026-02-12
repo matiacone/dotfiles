@@ -1,6 +1,7 @@
 ---
-allowed-tools: Read, Edit, Bash(gt add:*), Bash(gt modify:*), Bash(gt submit:*)
+name: ralph-append-plan
 description: Append tasks to an existing Ralph feature plan
+allowed-tools: Read Edit Bash(gt add:*) Bash(gt modify:*) Bash(gt submit:*)
 ---
 
 Append tasks to an existing Ralph feature plan based on our conversation.

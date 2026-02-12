@@ -1,4 +1,5 @@
 ---
+name: discuss
 description: Discuss potential implementations, changes, or architectural decisions without writing code
 ---
 

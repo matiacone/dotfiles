@@ -1,4 +1,5 @@
 ---
+name: update-command
 description: Update or create custom slash commands
 ---
 

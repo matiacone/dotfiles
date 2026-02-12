@@ -1,6 +1,7 @@
 ---
-allowed-tools: Write, Bash(mkdir:*)
+name: create-command
 description: Create a new custom slash command
+allowed-tools: Write Bash(mkdir:*)
 ---
 
 Create a new custom slash command for: $ARGUMENTS
@@ -8,7 +9,7 @@ Create a new custom slash command for: $ARGUMENTS
 When creating the command:
 
 1. **Use instruction format**: Write commands as direct instructions, not conversational messages
-2. **Structure properly**: 
+2. **Structure properly**:
    - YAML frontmatter with `description` field
    - Clear, imperative instructions in the body
    - Use `$ARGUMENTS` placeholder where user input should be inserted

@@ -1,4 +1,5 @@
 ---
+name: graphite-modify
 description: Amend staged changes to current branch (keeps message)
 ---
 

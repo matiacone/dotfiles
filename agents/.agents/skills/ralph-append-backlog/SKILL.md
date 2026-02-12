@@ -1,6 +1,7 @@
 ---
-allowed-tools: Read, Edit, Bash(gt add:*), Bash(gt modify:*), Bash(gt submit:*)
+name: ralph-append-backlog
 description: Append tasks to the Ralph backlog
+allowed-tools: Read Edit Bash(gt add:*) Bash(gt modify:*) Bash(gt submit:*)
 ---
 
 Append tasks to the Ralph backlog at `.ralph/backlog.json` based on our conversation.

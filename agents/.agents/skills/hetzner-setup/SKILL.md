@@ -1,4 +1,5 @@
 ---
+name: hetzner-setup
 description: Create a new Hetzner server with interactive setup
 ---
 

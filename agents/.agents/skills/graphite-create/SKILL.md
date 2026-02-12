@@ -1,4 +1,5 @@
 ---
+name: graphite-create
 description: Create a new Graphite branch with changes and submit PR
 ---
 

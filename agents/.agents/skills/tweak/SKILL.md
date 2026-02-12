@@ -1,4 +1,5 @@
 ---
+name: tweak
 description: Review and fix issues from annotations.txt
 ---
 
@@ -19,7 +20,7 @@ After all issues have been addressed:
    - Only add genuinely new guidance — don't duplicate what's already there
 3. Delete the original `annotations.txt` file
 4. Stage the changed files with `git add <changed-files>`
-5. Use /graphite:modify to amend staged changes to the current commit
-6. Use /graphite:submit to push and update the PR
+5. Use /graphite-modify to amend staged changes to the current commit
+6. Use /graphite-submit to push and update the PR
 
 Work through each annotation systematically and confirm when complete.

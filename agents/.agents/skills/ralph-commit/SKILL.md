@@ -1,10 +1,11 @@
 ---
+name: ralph-commit
 description: Commit to the feature branch specified in plan.md (for ralph workflows)
 ---
 
 Commit changes to the feature branch specified in the plan. All tasks for a feature go on ONE branch.
 
-⚠️ CRITICAL RULES:
+**CRITICAL RULES:**
 - NEVER use `gt track` - that means you created the branch with raw git, which breaks the stack
 - NEVER checkout develop/main first - create the branch from your CURRENT position in the stack
 - The branch parent must be whatever branch you're currently on, NOT develop

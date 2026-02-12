@@ -1,6 +1,7 @@
 ---
-allowed-tools: Read, Write, Bash(mkdir:*), Bash(gt add:*), Bash(gt modify:*), Bash(gt submit:*)
+name: ralph-create-plan
 description: Convert the current plan discussion into a Ralph feature plan
+allowed-tools: Read Write Bash(mkdir:*) Bash(gt add:*) Bash(gt modify:*) Bash(gt submit:*)
 ---
 
 Convert the current conversation into a Ralph feature plan.
@@ -58,5 +59,5 @@ Convert the current conversation into a Ralph feature plan.
 7. **Create empty progress.txt** in the same directory
 
 8. **Commit the changes** - After creating the plan, check which branch you're on:
-   - **If on a Graphite branch** (not `develop` or `main`): Use `/graphite:modify` to amend the current branch, then `/graphite:submit` to push
-   - **If on `develop`**: Use `/graphite:commit` to commit directly to develop (it will auto-push)
+   - **If on a Graphite branch** (not `develop` or `main`): Use `/graphite-modify` to amend the current branch, then `/graphite-submit` to push
+   - **If on `develop`**: Use `/graphite-commit` to commit directly to develop (it will auto-push)

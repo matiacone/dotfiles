@@ -1,4 +1,5 @@
 ---
+name: graphite-submit
 description: Push to remote and create/update PR
 ---
 
