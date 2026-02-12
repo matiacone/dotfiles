@@ -1,3 +1,8 @@
+---
+name: crustdata
+description: Crustdata API for company and people enrichment, search, and firmographic data
+---
+
 # Crustdata API Skill
 
 Crustdata provides comprehensive firmographic data and growth metrics for companies and people worldwide. This skill covers the REST API for company enrichment, company search, people enrichment, and people search.
