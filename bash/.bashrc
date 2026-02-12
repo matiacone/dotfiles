@@ -12,3 +12,6 @@ eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
 # OpenClaw Completion
 source "/home/mathew/.openclaw/completions/openclaw.bash"
+
+# sb sandbox CLI
+eval "$(sb completions bash)"

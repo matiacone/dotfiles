@@ -11,10 +11,15 @@ For each annotation:
 4. Verify the fix is complete
 
 After all issues have been addressed:
-1. Append the annotation contents to `.ralph/annotations.txt` to aggregate them (create the file if it doesn't exist)
-2. Delete the original `annotations.txt` file
-3. Stage the changed files with `git add <changed-files>`
-4. Use /graphite:modify to amend staged changes to the current commit
-5. Use /graphite:submit to push and update the PR
+1. Review the annotations for any lessons, patterns, or guidelines that should be captured as lasting knowledge (e.g. coding conventions, architectural decisions, gotchas, best practices)
+2. If any annotations represent reusable lessons, update the most relevant AGENTS.md file:
+   - Root `AGENTS.md` for project-wide conventions
+   - `packages/backend/AGENTS.md` for backend-specific patterns
+   - `apps/deal-deploy/AGENTS.md` for frontend-specific patterns
+   - Only add genuinely new guidance — don't duplicate what's already there
+3. Delete the original `annotations.txt` file
+4. Stage the changed files with `git add <changed-files>`
+5. Use /graphite:modify to amend staged changes to the current commit
+6. Use /graphite:submit to push and update the PR
 
 Work through each annotation systematically and confirm when complete.
