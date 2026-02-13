@@ -11,7 +11,7 @@ export PATH="$HOME/.npm-global/bin:$PATH"
 eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
 # OpenClaw Completion
-source "/home/mathew/.openclaw/completions/openclaw.bash"
+[[ -f ~/.openclaw/completions/openclaw.bash ]] && source ~/.openclaw/completions/openclaw.bash
 
 # sb sandbox CLI
 eval "$(sb completions bash)"
