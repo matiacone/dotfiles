@@ -21,7 +21,7 @@ import { homedir } from "os";
 // ── Constants & helpers (reused from original) ──────────────────────
 
 const LIBRARY = join(homedir(), "dotfiles/skills");
-const GLOBAL_DIR = join(homedir(), ".claude/skills");
+const GLOBAL_DIR = join(homedir(), ".agents/skills");
 
 function isLibraryLink(dir: string, name: string): boolean {
   const full = join(dir, name);
@@ -59,10 +59,8 @@ function toggle(dir: string, name: string): boolean {
 }
 
 function findLocalDir(): string | null {
-  for (const sub of [".agents/skills", ".claude/skills"]) {
-    const dir = join(process.cwd(), sub);
-    if (existsSync(dir)) return dir;
-  }
+  const dir = join(process.cwd(), ".agents/skills");
+  if (existsSync(dir)) return dir;
   return null;
 }
 
@@ -158,17 +156,18 @@ const colName = new TextRenderable(renderer, {
 });
 const colGlobal = new TextRenderable(renderer, {
   id: "col-global",
-  content: "Global",
+  content: "~/.agents",
   fg: C.fgDim,
   attributes: TextAttributes.BOLD,
-  width: 10,
+  width: 12,
 });
+const localLabel = localDir ? localDir.replace(homedir(), "~") : ".agents (n/a)";
 const colLocal = new TextRenderable(renderer, {
   id: "col-local",
-  content: "Local",
+  content: localLabel,
   fg: C.fgDim,
   attributes: TextAttributes.BOLD,
-  width: 10,
+  width: 20,
 });
 
 colHeaderRow.add(colName);
@@ -376,26 +375,26 @@ renderer.keyInput.on("keypress", (key: KeyEvent) => {
         if (ok) {
           const linked = isLibraryLink(GLOBAL_DIR, skill);
           setStatus(
-            linked ? `✓ ${skill} linked globally` : `✗ ${skill} unlinked globally`,
+            linked ? `✓ ${skill} → ~/.agents/skills` : `✗ ${skill} removed from ~/.agents/skills`,
             linked ? C.statusOk : C.statusErr
           );
         } else {
-          setStatus(`⚠ ${skill}: non-library file exists, skipped`, C.warning);
+          setStatus(`⚠ ${skill}: non-library file exists in ~/.agents/skills, skipped`, C.warning);
         }
       } else {
         if (!localDir) {
-          setStatus("No local skills dir (.agents/skills or .claude/skills)", C.warning);
+          setStatus("No .agents/skills dir in current project", C.warning);
           break;
         }
         const ok = toggle(localDir, skill);
         if (ok) {
           const linked = isLibraryLink(localDir, skill);
           setStatus(
-            linked ? `✓ ${skill} linked locally` : `✗ ${skill} unlinked locally`,
+            linked ? `✓ ${skill} → ${localLabel}` : `✗ ${skill} removed from ${localLabel}`,
             linked ? C.statusOk : C.statusErr
           );
         } else {
-          setStatus(`⚠ ${skill}: non-library file exists, skipped`, C.warning);
+          setStatus(`⚠ ${skill}: non-library file exists in ${localLabel}, skipped`, C.warning);
         }
       }
       break;
