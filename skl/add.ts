@@ -89,21 +89,27 @@ const treeJson = JSON.parse(
 );
 const tree: { path: string; type: string }[] = treeJson.tree;
 
-const skillMdPaths = tree
-  .filter((e) => e.type === "blob" && /^[^/]+\/SKILL\.md$/.test(e.path))
-  .map((e) => e.path.split("/")[0])
-  .sort();
+// Find SKILL.md at any depth (supports both flat "name/SKILL.md" and nested "skill/name/SKILL.md")
+const skillEntries = tree
+  .filter((e) => e.type === "blob" && e.path.endsWith("/SKILL.md"))
+  .map((e) => {
+    const prefix = e.path.replace(/\/SKILL\.md$/, ""); // e.g. "skill/opentui" or "opentui"
+    const name = prefix.split("/").pop()!; // last segment is the skill name
+    return { prefix, name };
+  })
+  .sort((a, b) => a.name.localeCompare(b.name));
 
-if (skillMdPaths.length === 0) {
-  console.error(`No skills found in ${repo} (no top-level dirs with SKILL.md)`);
+if (skillEntries.length === 0) {
+  console.error(`No skills found in ${repo} (no directories with SKILL.md)`);
   process.exit(1);
 }
 
 // ── Classify skills ──────────────────────────────────────────────────
 
-type SkillEntry = { name: string; exists: boolean };
-const skills: SkillEntry[] = skillMdPaths.map((name) => ({
+type SkillEntry = { name: string; prefix: string; exists: boolean };
+const skills: SkillEntry[] = skillEntries.map(({ name, prefix }) => ({
   name,
+  prefix,
   exists: skillExists(name),
 }));
 
@@ -118,6 +124,7 @@ if (addableCount === 0) {
 let cursor = 0;
 const checked = new Set<number>();
 let statusTimeout: ReturnType<typeof setTimeout> | null = null;
+let exitResolve: () => void;
 
 // Start cursor on first addable skill
 for (let i = 0; i < skills.length; i++) {
@@ -284,7 +291,7 @@ refreshAll();
 
 // ── Confirm & download ───────────────────────────────────────────────
 
-function confirmAndDownload() {
+async function confirmAndDownload() {
   const selected = [...checked].map((i) => skills[i].name);
   if (selected.length === 0) {
     setStatus("Nothing selected — use space to toggle", C.warning);
@@ -296,45 +303,46 @@ function confirmAndDownload() {
   // Download phase — plain stdout like before
   const baseUrl = `https://raw.githubusercontent.com/${repo}/${branch}`;
 
-  (async () => {
-    for (const skillName of selected) {
-      const skillDir = join(LIBRARY, skillName);
+  for (const skillName of selected) {
+    const skill = skills.find((s) => s.name === skillName)!;
+    const skillDir = join(LIBRARY, skillName);
 
-      // Remove broken symlink if present
-      try {
-        if (lstatSync(skillDir).isSymbolicLink()) {
-          unlinkSync(skillDir);
-        }
-      } catch {}
-
-      mkdirSync(skillDir, { recursive: true });
-
-      const prefix = skillName + "/";
-      const files = tree
-        .filter((e) => e.type === "blob" && e.path.startsWith(prefix))
-        .map((e) => e.path);
-
-      process.stdout.write(`  ${skillName} (${files.length} files)...`);
-
-      for (const filePath of files) {
-        const url = `${baseUrl}/${filePath}`;
-        const resp = await fetch(url);
-        if (!resp.ok) {
-          console.error(`\n    Failed to fetch ${filePath}: ${resp.status}`);
-          continue;
-        }
-        const content = await resp.arrayBuffer();
-        const dest = join(LIBRARY, filePath);
-        const dir = dest.substring(0, dest.lastIndexOf("/"));
-        mkdirSync(dir, { recursive: true });
-        writeFileSync(dest, Buffer.from(content));
+    // Remove broken symlink if present
+    try {
+      if (lstatSync(skillDir).isSymbolicLink()) {
+        unlinkSync(skillDir);
       }
-      console.log(" done");
-    }
+    } catch {}
 
-    console.log(`\nAdded ${selected.length} skill(s) to ~/dotfiles/skills/`);
-    process.exit(0);
-  })();
+    mkdirSync(skillDir, { recursive: true });
+
+    const prefix = skill.prefix + "/";
+    const files = tree
+      .filter((e) => e.type === "blob" && e.path.startsWith(prefix))
+      .map((e) => e.path);
+
+    process.stdout.write(`  ${skillName} (${files.length} files)...`);
+
+    for (const filePath of files) {
+      const url = `${baseUrl}/${filePath}`;
+      const resp = await fetch(url);
+      if (!resp.ok) {
+        console.error(`\n    Failed to fetch ${filePath}: ${resp.status}`);
+        continue;
+      }
+      const content = await resp.arrayBuffer();
+      // Remap: strip the repo prefix and save under the skill name
+      const relativePath = filePath.substring(prefix.length);
+      const dest = join(LIBRARY, skillName, relativePath);
+      const dir = dest.substring(0, dest.lastIndexOf("/"));
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(dest, Buffer.from(content));
+    }
+    console.log(" done");
+  }
+
+  console.log(`\nAdded ${selected.length} skill(s) to ~/dotfiles/skills/`);
+  exitResolve();
 }
 
 // ── Key handler ──────────────────────────────────────────────────────
@@ -385,8 +393,8 @@ renderer.keyInput.on("keypress", (key: KeyEvent) => {
     case "q":
     case "escape":
       renderer.destroy();
-      process.exit(0);
-      break;
+      exitResolve();
+      return;
     default:
       return;
   }
@@ -395,4 +403,9 @@ renderer.keyInput.on("keypress", (key: KeyEvent) => {
   updateRow(cursor);
   updateHeader();
   ensureVisible();
+});
+
+// Block module from resolving until TUI exits
+await new Promise<void>((resolve) => {
+  exitResolve = resolve;
 });

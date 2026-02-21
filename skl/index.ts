@@ -21,6 +21,7 @@ import {
   unlinkSync,
   mkdirSync,
   existsSync,
+  rmSync,
 } from "fs";
 import { join, resolve } from "path";
 import { homedir } from "os";
@@ -90,6 +91,8 @@ let cursor = 0; // index into filteredIndices
 let cursorCol: "global" | "local" = "global";
 const localDir = findLocalDir();
 let statusTimeout: ReturnType<typeof setTimeout> | null = null;
+let pendingDelete: number | null = null; // allSkills index awaiting confirmation
+const deletedSkills = new Set<number>();
 let searchMode = false;
 let searchQuery = "";
 let filteredIndices: number[] = allSkills.map((_, i) => i);
@@ -133,10 +136,16 @@ function checkboxColor(checked: boolean, blocked: boolean, active: boolean): str
 
 function countLinked(): number {
   let n = 0;
-  for (const s of allSkills) {
+  for (let i = 0; i < allSkills.length; i++) {
+    if (deletedSkills.has(i)) continue;
+    const s = allSkills[i];
     if (isLibraryLink(GLOBAL_DIR, s) || (localDir && isLibraryLink(localDir, s))) n++;
   }
   return n;
+}
+
+function activeSkillCount(): number {
+  return allSkills.length - deletedSkills.size;
 }
 
 // ── Build TUI ───────────────────────────────────────────────────────
@@ -276,7 +285,7 @@ const footerSep = new TextRenderable(renderer, {
 
 const footer = new TextRenderable(renderer, {
   id: "footer",
-  content: " j/k move  h/l col  space toggle  a all  / search  q quit",
+  content: " j/k move  h/l col  space toggle  a all  d delete  / search  q quit",
   fg: C.footer,
   height: 1,
 });
@@ -304,6 +313,10 @@ function applyFilter() {
   const term = searchQuery.toLowerCase();
   filteredIndices = [];
   for (let i = 0; i < allSkills.length; i++) {
+    if (deletedSkills.has(i)) {
+      rows[i].row.visible = false;
+      continue;
+    }
     const match = !term || allSkills[i].toLowerCase().includes(term);
     rows[i].row.visible = match;
     if (match) filteredIndices.push(i);
@@ -374,7 +387,7 @@ function updateRow(i: number) {
 }
 
 function updateHeader() {
-  header.content = ` Skills Manager (${countLinked()}/${allSkills.length} linked)`;
+  header.content = ` Skills Manager (${countLinked()}/${activeSkillCount()} linked)`;
 }
 
 function setStatus(msg: string, color: string) {
@@ -436,6 +449,36 @@ function toggleAllColumn(col: "global" | "local") {
   setStatus(msg, shouldLink ? C.statusOk : C.statusErr);
 }
 
+// ── Delete skill ────────────────────────────────────────────────
+
+function cancelPendingDelete() {
+  if (pendingDelete !== null) {
+    pendingDelete = null;
+    statusLine.content = "";
+  }
+}
+
+function deleteSkill(idx: number) {
+  const skill = allSkills[idx];
+
+  // Remove symlinks first
+  if (isLibraryLink(GLOBAL_DIR, skill)) unlinkSync(join(GLOBAL_DIR, skill));
+  if (localDir && isLibraryLink(localDir, skill)) unlinkSync(join(localDir, skill));
+
+  // Remove from library
+  rmSync(join(LIBRARY, skill), { recursive: true, force: true });
+
+  // Mark deleted and hide
+  deletedSkills.add(idx);
+  rows[idx].row.visible = false;
+  pendingDelete = null;
+
+  applyFilter();
+  setStatus(`🗑 ${skill} deleted`, C.statusErr);
+  refreshAll();
+  ensureVisible();
+}
+
 // ── Key handler ─────────────────────────────────────────────────────
 
 renderer.keyInput.on("keypress", (key: KeyEvent) => {
@@ -466,6 +509,17 @@ renderer.keyInput.on("keypress", (key: KeyEvent) => {
       refreshAll();
       ensureVisible();
       return;
+    }
+    return;
+  }
+
+  // ── Delete confirmation mode ──
+  if (pendingDelete !== null) {
+    if (key.name === "y") {
+      deleteSkill(pendingDelete);
+    } else {
+      cancelPendingDelete();
+      setStatus("delete cancelled", C.fgDim);
     }
     return;
   }
@@ -528,6 +582,13 @@ renderer.keyInput.on("keypress", (key: KeyEvent) => {
     case "a":
       toggleAllColumn(cursorCol);
       break;
+    case "d": {
+      const idx = currentSkillIndex();
+      if (idx === null) break;
+      pendingDelete = idx;
+      setStatus(`delete ${allSkills[idx]}? (y to confirm)`, C.warning);
+      break;
+    }
     case "g":
       if (!key.shift) {
         cursor = 0;
