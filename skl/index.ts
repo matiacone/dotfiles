@@ -1,3 +1,10 @@
+// ── Subcommand routing ───────────────────────────────────────────────
+const [subcommand] = process.argv.slice(2);
+if (subcommand === "add") {
+  await import("./add.ts");
+  process.exit(0);
+}
+
 import {
   createCliRenderer,
   BoxRenderable,
