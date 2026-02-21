@@ -1,6 +1,6 @@
 {
-  "name": "skills-manager",
-  "module": "index.ts",
+  "name": "skl",
+"module": "index.ts",
   "devDependencies": {
     "@types/bun": "latest"
   },

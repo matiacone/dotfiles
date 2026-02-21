@@ -14,4 +14,7 @@ eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 [[ -f ~/.openclaw/completions/openclaw.bash ]] && source ~/.openclaw/completions/openclaw.bash
 
 # sb sandbox CLI
-eval "$(sb completions bash)"
+command -v sb &>/dev/null && eval "$(sb completions bash)"
+
+# Skills manager
+alias skl='bun run ~/dotfiles/skl/index.ts'
