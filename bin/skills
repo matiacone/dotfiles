@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+exec bun run "$HOME/dotfiles/skills-manager/index.ts" "$@"
