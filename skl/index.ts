@@ -285,7 +285,7 @@ const footerSep = new TextRenderable(renderer, {
 
 const footer = new TextRenderable(renderer, {
   id: "footer",
-  content: " j/k move  h/l col  space toggle  a all  d delete  / search  q quit",
+  content: " j/k move  h/l col  space toggle  a all  e edit  d delete  / search  q quit",
   fg: C.footer,
   height: 1,
 });
@@ -449,6 +449,24 @@ function toggleAllColumn(col: "global" | "local") {
   setStatus(msg, shouldLink ? C.statusOk : C.statusErr);
 }
 
+// ── Edit skill ──────────────────────────────────────────────────
+
+async function editSkill(idx: number) {
+  const skill = allSkills[idx];
+  const skillPath = join(LIBRARY, skill);
+  renderer.destroy();
+  const proc = Bun.spawn(["nvim", skillPath], {
+    stdio: ["inherit", "inherit", "inherit"],
+  });
+  await proc.exited;
+  // Re-exec so the TUI picks up any changes
+  const self = Bun.spawn(["bun", ...process.argv.slice(1)], {
+    stdio: ["inherit", "inherit", "inherit"],
+  });
+  await self.exited;
+  process.exit(0);
+}
+
 // ── Delete skill ────────────────────────────────────────────────
 
 function cancelPendingDelete() {
@@ -582,6 +600,12 @@ renderer.keyInput.on("keypress", (key: KeyEvent) => {
     case "a":
       toggleAllColumn(cursorCol);
       break;
+    case "e": {
+      const idx = currentSkillIndex();
+      if (idx === null) break;
+      editSkill(idx);
+      return;
+    }
     case "d": {
       const idx = currentSkillIndex();
       if (idx === null) break;
