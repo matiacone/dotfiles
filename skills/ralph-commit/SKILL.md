@@ -1,16 +1,19 @@
 ---
 name: ralph-commit
-description: Commit to the feature branch specified in plan.md (for ralph workflows)
+description: Commit changes to the appropriate branch (for ralph workflows)
 ---
 
-Commit changes to the feature branch specified in the plan. All tasks for a feature go on ONE branch.
+Commit changes to the feature branch.
 
 **CRITICAL RULES:**
 - NEVER use `gt track` - that means you created the branch with raw git, which breaks the stack
 - NEVER checkout develop/main first - create the branch from your CURRENT position in the stack
 - The branch parent must be whatever branch you're currently on, NOT develop
 
-1. Read the **Branch** field from plan.md to get the target branch name
+1. Determine the target branch name:
+   - If `plan.md` exists in the feature directory, read the **Branch** field from it
+   - **Artifact/feature issues** (title prefixed "XYZ: "): Use ONE branch for the entire feature (e.g., `ralph/search`). All issues under the same artifact share this branch — modify, don't create.
+   - **Standalone issues**: One branch per issue (e.g., `ralph/fix-login-bug`)
 2. Generate a commit message based on the task you completed
 3. Check current branch: `git branch --show-current`
 4. If NOT on the target branch:

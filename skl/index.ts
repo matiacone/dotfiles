@@ -31,6 +31,13 @@ import { homedir } from "os";
 const LIBRARY = join(homedir(), "dotfiles/skills");
 const GLOBAL_DIR = join(homedir(), ".agents/skills");
 
+function ellipsize(text: string, max: number): string {
+  if (max <= 0) return "";
+  if (text.length <= max) return text;
+  if (max === 1) return "…";
+  return `${text.slice(0, max - 1)}…`;
+}
+
 // Safety: ensure GLOBAL_DIR is a real directory, not a symlink to the library
 try {
   if (lstatSync(GLOBAL_DIR).isSymbolicLink()) {
@@ -83,18 +90,29 @@ function findLocalDir(): string | null {
   return null;
 }
 
+function ensureLocalDir(): string {
+  if (localDir) return localDir;
+  const dir = join(process.cwd(), ".agents/skills");
+  mkdirSync(dir, { recursive: true });
+  localDir = dir;
+  localLabel = dir.replace(homedir(), "~");
+  colLocal.content = ellipsize(localLabel, 20);
+  refreshAll();
+  return dir;
+}
+
 const allSkills = readdirSync(LIBRARY).sort();
 
 // ── State ───────────────────────────────────────────────────────────
 
 let cursor = 0; // index into filteredIndices
 let cursorCol: "global" | "local" = "global";
-const localDir = findLocalDir();
+let localDir = findLocalDir();
 let statusTimeout: ReturnType<typeof setTimeout> | null = null;
 let pendingDelete: number | null = null; // allSkills index awaiting confirmation
 const deletedSkills = new Set<number>();
-let searchMode = false;
 let searchQuery = "";
+let searchMode = false;
 let filteredIndices: number[] = allSkills.map((_, i) => i);
 
 // ── Colors ──────────────────────────────────────────────────────────
@@ -132,22 +150,6 @@ function checkboxColor(checked: boolean, blocked: boolean, active: boolean): str
   return checked ? C.checked : C.unchecked;
 }
 
-// ── Count linked skills ─────────────────────────────────────────────
-
-function countLinked(): number {
-  let n = 0;
-  for (let i = 0; i < allSkills.length; i++) {
-    if (deletedSkills.has(i)) continue;
-    const s = allSkills[i];
-    if (isLibraryLink(GLOBAL_DIR, s) || (localDir && isLibraryLink(localDir, s))) n++;
-  }
-  return n;
-}
-
-function activeSkillCount(): number {
-  return allSkills.length - deletedSkills.size;
-}
-
 // ── Build TUI ───────────────────────────────────────────────────────
 
 const renderer = await createCliRenderer({ exitOnCtrlC: true });
@@ -160,21 +162,20 @@ const outer = new BoxRenderable(renderer, {
   backgroundColor: C.bg,
 });
 
-const header = new TextRenderable(renderer, {
-  id: "header",
-  content: ` Skills Manager (${countLinked()}/${allSkills.length} linked)`,
-  fg: C.title,
-  attributes: TextAttributes.BOLD,
+const topSpacer = new TextRenderable(renderer, {
+  id: "top-spacer",
+  content: "",
   height: 1,
 });
 
-// Search bar (hidden until / is pressed)
+// Search bar (always visible, type-to-filter)
 const searchBar = new TextRenderable(renderer, {
   id: "search-bar",
   content: "",
   fg: C.search,
+  width: "100%",
   height: 1,
-  visible: false,
+  visible: true,
 });
 
 const colHeaderRow = new BoxRenderable(renderer, {
@@ -198,10 +199,11 @@ const colGlobal = new TextRenderable(renderer, {
   attributes: TextAttributes.BOLD,
   width: 12,
 });
-const localLabel = localDir ? localDir.replace(homedir(), "~") : ".agents (n/a)";
+let localLabel = localDir ? localDir.replace(homedir(), "~") : ".agents (n/a)";
+const localLabelHeader = ellipsize(localLabel, 20);
 const colLocal = new TextRenderable(renderer, {
   id: "col-local",
-  content: localLabel,
+  content: localLabelHeader,
   fg: C.fgDim,
   attributes: TextAttributes.BOLD,
   width: 20,
@@ -285,7 +287,7 @@ const footerSep = new TextRenderable(renderer, {
 
 const footer = new TextRenderable(renderer, {
   id: "footer",
-  content: " j/k move  h/l col  space toggle  a all  e edit  d delete  / search  q quit",
+  content: " / search  j/k move  h/l/tab col  enter toggle  a all  e edit  d delete  q quit",
   fg: C.footer,
   height: 1,
 });
@@ -297,13 +299,13 @@ const statusLine = new TextRenderable(renderer, {
   height: 1,
 });
 
-outer.add(header);
-outer.add(searchBar);
+outer.add(topSpacer);
 outer.add(colHeaderRow);
 outer.add(sep);
 outer.add(scrollBox);
 outer.add(footerSep);
 outer.add(footer);
+outer.add(searchBar);
 outer.add(statusLine);
 renderer.root.add(outer);
 
@@ -331,13 +333,10 @@ function applyFilter() {
 
 function updateSearchBar() {
   if (searchMode) {
-    searchBar.visible = true;
-    searchBar.content = ` / ${searchQuery}█`;
+    searchBar.content = ` /${searchQuery}█  (esc cancel · enter confirm)`;
   } else if (searchQuery) {
-    searchBar.visible = true;
-    searchBar.content = ` / ${searchQuery}  (esc clear)`;
+    searchBar.content = ` filter: ${searchQuery}  (esc clear · / to edit)`;
   } else {
-    searchBar.visible = false;
     searchBar.content = "";
   }
 }
@@ -386,10 +385,6 @@ function updateRow(i: number) {
   }
 }
 
-function updateHeader() {
-  header.content = ` Skills Manager (${countLinked()}/${activeSkillCount()} linked)`;
-}
-
 function setStatus(msg: string, color: string) {
   statusLine.content = ` ${msg}`;
   statusLine.fg = color;
@@ -401,7 +396,6 @@ function setStatus(msg: string, color: string) {
 
 function refreshAll() {
   for (const i of filteredIndices) updateRow(i);
-  updateHeader();
   updateSearchBar();
 }
 
@@ -416,11 +410,7 @@ function ensureVisible() {
 // ── Toggle all in column ────────────────────────────────────────────
 
 function toggleAllColumn(col: "global" | "local") {
-  const dir = col === "global" ? GLOBAL_DIR : localDir;
-  if (!dir) {
-    setStatus("No .agents/skills dir in current project", C.warning);
-    return;
-  }
+  const dir = col === "global" ? GLOBAL_DIR : ensureLocalDir();
 
   // Determine intent: if majority of visible skills are linked, unlink all; otherwise link all
   let linkedCount = 0;
@@ -500,37 +490,6 @@ function deleteSkill(idx: number) {
 // ── Key handler ─────────────────────────────────────────────────────
 
 renderer.keyInput.on("keypress", (key: KeyEvent) => {
-  // ── Search mode input ──
-  if (searchMode) {
-    if (key.name === "escape" || key.name === "return") {
-      searchMode = false;
-      if (key.name === "escape" && !searchQuery) {
-        // just close search
-      }
-      updateSearchBar();
-      refreshAll();
-      ensureVisible();
-      return;
-    }
-    if (key.name === "backspace") {
-      searchQuery = searchQuery.slice(0, -1);
-      applyFilter();
-      refreshAll();
-      ensureVisible();
-      return;
-    }
-    // Regular character input
-    if (key.sequence && key.sequence.length === 1 && !key.ctrl && !key.meta) {
-      searchQuery += key.sequence;
-      applyFilter();
-      cursor = 0;
-      refreshAll();
-      ensureVisible();
-      return;
-    }
-    return;
-  }
-
   // ── Delete confirmation mode ──
   if (pendingDelete !== null) {
     if (key.name === "y") {
@@ -542,10 +501,63 @@ renderer.keyInput.on("keypress", (key: KeyEvent) => {
     return;
   }
 
-  // ── Normal mode ──
-  const prevCursor = cursor;
   const prevIdx = currentSkillIndex();
 
+  // ── Search mode: "/" to enter, Enter to confirm, Esc to cancel ──
+  if (searchMode) {
+    if (key.name === "escape") {
+      searchQuery = "";
+      searchMode = false;
+      applyFilter();
+      refreshAll();
+      ensureVisible();
+      return;
+    }
+    if (key.name === "return") {
+      searchMode = false;
+      updateSearchBar();
+      return;
+    }
+    if (key.name === "backspace") {
+      searchQuery = searchQuery.slice(0, -1);
+      applyFilter();
+      cursor = 0;
+      refreshAll();
+      ensureVisible();
+      return;
+    }
+    if (key.sequence && key.sequence.length === 1 && !key.ctrl && !key.meta) {
+      searchQuery += key.sequence;
+      applyFilter();
+      cursor = 0;
+      refreshAll();
+      ensureVisible();
+      return;
+    }
+    return;
+  }
+
+  // ── Normal mode ──
+
+  // "/" enters search mode
+  if (key.sequence === "/") {
+    searchMode = true;
+    updateSearchBar();
+    return;
+  }
+
+  // Escape clears active filter
+  if (key.name === "escape") {
+    if (searchQuery) {
+      searchQuery = "";
+      applyFilter();
+      refreshAll();
+      ensureVisible();
+    }
+    return;
+  }
+
+  // Navigation & commands (no ctrl required)
   switch (key.name) {
     case "j":
     case "down":
@@ -563,7 +575,43 @@ renderer.keyInput.on("keypress", (key: KeyEvent) => {
     case "right":
       cursorCol = "local";
       break;
-    case "space":
+    case "tab":
+      cursorCol = cursorCol === "global" ? "local" : "global";
+      break;
+    case "pagedown":
+      cursor = Math.min(filteredIndices.length - 1, cursor + 10);
+      break;
+    case "pageup":
+      cursor = Math.max(0, cursor - 10);
+      break;
+    case "home":
+      cursor = 0;
+      break;
+    case "end":
+      cursor = Math.max(0, filteredIndices.length - 1);
+      break;
+    case "a":
+      toggleAllColumn(cursorCol);
+      for (const i of filteredIndices) updateRow(i);
+      ensureVisible();
+      return;
+    case "e": {
+      const idx = currentSkillIndex();
+      if (idx === null) break;
+      editSkill(idx);
+      return;
+    }
+    case "d": {
+      const idx = currentSkillIndex();
+      if (idx === null) break;
+      pendingDelete = idx;
+      setStatus(`delete ${allSkills[idx]}? (y to confirm)`, C.warning);
+      break;
+    }
+    case "q":
+      renderer.destroy();
+      process.exit(0);
+      return;
     case "return": {
       const idx = currentSkillIndex();
       if (idx === null) break;
@@ -580,11 +628,8 @@ renderer.keyInput.on("keypress", (key: KeyEvent) => {
           setStatus(`⚠ ${skill}: non-library file exists in ~/.agents/skills, skipped`, C.warning);
         }
       } else {
-        if (!localDir) {
-          setStatus("No .agents/skills dir in current project", C.warning);
-          break;
-        }
-        const ok = toggle(localDir, skill);
+        const dir = ensureLocalDir();
+        const ok = toggle(dir, skill);
         if (ok) {
           const linked = isLibraryLink(localDir, skill);
           setStatus(
@@ -597,45 +642,6 @@ renderer.keyInput.on("keypress", (key: KeyEvent) => {
       }
       break;
     }
-    case "a":
-      toggleAllColumn(cursorCol);
-      break;
-    case "e": {
-      const idx = currentSkillIndex();
-      if (idx === null) break;
-      editSkill(idx);
-      return;
-    }
-    case "d": {
-      const idx = currentSkillIndex();
-      if (idx === null) break;
-      pendingDelete = idx;
-      setStatus(`delete ${allSkills[idx]}? (y to confirm)`, C.warning);
-      break;
-    }
-    case "g":
-      if (!key.shift) {
-        cursor = 0;
-      } else {
-        cursor = filteredIndices.length - 1;
-      }
-      break;
-    case "q":
-      renderer.destroy();
-      process.exit(0);
-      break;
-    case "/":
-      searchMode = true;
-      updateSearchBar();
-      return;
-    case "escape":
-      if (searchQuery) {
-        searchQuery = "";
-        applyFilter();
-        refreshAll();
-        ensureVisible();
-      }
-      return;
     default:
       return;
   }
@@ -645,10 +651,5 @@ renderer.keyInput.on("keypress", (key: KeyEvent) => {
   }
   const ci = currentSkillIndex();
   if (ci !== null) updateRow(ci);
-  // after toggle-all, refresh everything
-  if (key.name === "a") {
-    for (const i of filteredIndices) updateRow(i);
-  }
-  updateHeader();
   ensureVisible();
 });

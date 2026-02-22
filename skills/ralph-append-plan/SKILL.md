@@ -1,59 +1,57 @@
 ---
 name: ralph-append-plan
-description: Append tasks to an existing Ralph feature plan
-allowed-tools: Read Edit Bash(gt add:*) Bash(gt modify:*) Bash(gt submit:*)
+description: Create child GitHub issues on a PRD (feature plan) issue
+allowed-tools: Bash(gh issue create:*) Bash(gh issue view:*) Bash(gh issue list:*)
 ---
 
-Append tasks to an existing Ralph feature plan based on our conversation.
+Create child GitHub issues for a PRD (Product Requirements Document) issue based on our conversation.
 
 ## Instructions
 
-1. **Identify the feature** - Look at the current branch or recent conversation to determine which feature plan to update. Check `.ralph/features/` for existing feature directories.
+1. **Identify the PRD** - Get the PRD issue number from the conversation or by searching:
+   ```bash
+   gh issue list --state open --search "Artifact:" --json number,title
+   ```
 
-2. **Read** the current `.ralph/features/<feature-name>/tasks.json` file
+2. **Read the PRD** - Use `gh issue view <number>` to understand the full feature plan
 
 3. **Analyze the conversation history** - Review our discussion to identify:
-   - New tasks that need to be added
+   - New tasks that need to be added as child issues
    - Additional work discovered during implementation
    - Follow-up items or improvements discussed
    - Any TODOs or "we should also" items mentioned
 
-4. **For each new task**, create a task object:
-   ```json
-   {
-     "title": "Task title",
-     "description": "WHY this needs to be done (not HOW)",
-     "acceptance": ["Clear criterion to verify completion"],
-     "passes": false
-   }
+4. **For each new task**, create a GitHub issue:
+   ```bash
+   gh issue create --title "<PRD Prefix>: <Task title>" --body "$(cat <<'EOF'
+   <Description: WHY this needs to be done with enough context to start>
+
+   ## Acceptance Criteria
+   - [ ] Clear, testable criterion
+
+   ## Parent PRD
+   #<prd-number>
+
+   ## Blocked by
+   <list any issue numbers that must be completed first, or "None">
+   EOF
+   )"
    ```
 
-5. **APPEND** the new tasks to the existing `tasks` array - do NOT replace existing tasks
-
-6. **Confirm** what was added by listing the new task titles
+5. **Confirm** what was created by listing the new issue numbers and titles
 
 ## Task Guidelines
 
-- Each task should be independently testable and valuable
-- Include validation/testing as a separate task if needed
-- Description should explain WHY, not prescribe HOW (no line numbers, no exact code)
+- Each issue should be independently testable and valuable
+- Title should be prefixed with the PRD's prefix (e.g., "Search: Create search API")
+- Description should explain WHY, not prescribe HOW
 - Acceptance criteria should be clear enough to verify completion
 - Think kanban tickets: just enough context to start, clear done criteria
-- All tasks start with `"passes": false`
 
 **CRITICAL: Atomic Changes**
-- If a task changes a shared API (function signature, query args, etc.), it MUST include updating all callers in the same task
-- Never split "change the API" and "update callers" into separate tasks - this breaks the build between tasks
-- Example: "Refactor getCompaniesPaginated args" should include both backend changes AND frontend caller updates
+- If a task changes a shared API (function signature, query args, etc.), it MUST include updating all callers in the same issue
+- Never split "change the API" and "update callers" into separate issues - this breaks the build between tasks
 
 **CRITICAL: Full-Stack Type Checking**
-- Every task must leave the codebase in a state where `bun run check-types` passes at the ROOT level (not just in one package)
-- When planning tasks, consider: "After this task is done, will the entire monorepo still compile?"
-- If a task would break type checking until a subsequent task is done, merge those tasks
-
-**IMPORTANT:** Always APPEND the new tasks to the existing `tasks.json` file. Read the file first, then add your new tasks to the existing tasks array. Never overwrite the entire file or remove existing tasks.
-
-7. **Commit the changes** - After updating the plan, stage, commit, and submit:
-   ```bash
-   gt add .ralph/features/<feature-name>/tasks.json && gt modify && gt submit --no-interactive
-   ```
+- Every issue must leave the codebase in a state where `bun run check-types` passes at the ROOT level
+- If a task would break type checking until a subsequent task is done, merge those tasks into one issue
