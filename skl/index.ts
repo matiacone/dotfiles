@@ -112,7 +112,6 @@ let statusTimeout: ReturnType<typeof setTimeout> | null = null;
 let pendingDelete: number | null = null; // allSkills index awaiting confirmation
 const deletedSkills = new Set<number>();
 let searchQuery = "";
-let searchMode = false;
 let filteredIndices: number[] = allSkills.map((_, i) => i);
 
 // ── Colors ──────────────────────────────────────────────────────────
@@ -162,13 +161,7 @@ const outer = new BoxRenderable(renderer, {
   backgroundColor: C.bg,
 });
 
-const topSpacer = new TextRenderable(renderer, {
-  id: "top-spacer",
-  content: "",
-  height: 1,
-});
-
-// Search bar (always visible, type-to-filter)
+// Search bar (always visible at top, type-to-filter)
 const searchBar = new TextRenderable(renderer, {
   id: "search-bar",
   content: "",
@@ -287,7 +280,7 @@ const footerSep = new TextRenderable(renderer, {
 
 const footer = new TextRenderable(renderer, {
   id: "footer",
-  content: " / search  j/k move  h/l/tab col  space/enter toggle  ^a all  e edit  d delete  q quit",
+  content: " type to filter  ↑↓ move  ←→/tab col  enter toggle  ^a all  ^e edit  ^d del  esc quit",
   fg: C.footer,
   height: 1,
 });
@@ -299,13 +292,12 @@ const statusLine = new TextRenderable(renderer, {
   height: 1,
 });
 
-outer.add(topSpacer);
+outer.add(searchBar);
 outer.add(colHeaderRow);
 outer.add(sep);
 outer.add(scrollBox);
 outer.add(footerSep);
 outer.add(footer);
-outer.add(searchBar);
 outer.add(statusLine);
 renderer.root.add(outer);
 
@@ -332,13 +324,7 @@ function applyFilter() {
 }
 
 function updateSearchBar() {
-  if (searchMode) {
-    searchBar.content = ` /${searchQuery}█  (esc cancel · enter confirm)`;
-  } else if (searchQuery) {
-    searchBar.content = ` filter: ${searchQuery}  (esc clear · / to edit)`;
-  } else {
-    searchBar.content = "";
-  }
+  searchBar.content = ` / ${searchQuery}█`;
 }
 
 // ── Update display ──────────────────────────────────────────────────
@@ -503,75 +489,68 @@ renderer.keyInput.on("keypress", (key: KeyEvent) => {
 
   const prevIdx = currentSkillIndex();
 
-  // ── Search mode: "/" to enter, Enter to confirm, Esc to cancel ──
-  if (searchMode) {
-    if (key.name === "escape") {
-      searchQuery = "";
-      searchMode = false;
-      applyFilter();
-      refreshAll();
-      ensureVisible();
-      return;
-    }
-    if (key.name === "return") {
-      searchMode = false;
-      updateSearchBar();
-      return;
-    }
-    if (key.name === "backspace") {
-      searchQuery = searchQuery.slice(0, -1);
-      applyFilter();
-      cursor = 0;
-      refreshAll();
-      ensureVisible();
-      return;
-    }
-    if (key.sequence && key.sequence.length === 1 && !key.ctrl && !key.meta) {
-      searchQuery += key.sequence;
-      applyFilter();
-      cursor = 0;
-      refreshAll();
-      ensureVisible();
-      return;
-    }
-    return;
-  }
-
-  // ── Normal mode ──
-
-  // "/" enters search mode
-  if (key.sequence === "/") {
-    searchMode = true;
-    updateSearchBar();
-    return;
-  }
-
-  // Escape clears active filter
+  // ── Escape: clear search or quit ──
   if (key.name === "escape") {
     if (searchQuery) {
       searchQuery = "";
       applyFilter();
       refreshAll();
       ensureVisible();
+    } else {
+      renderer.destroy();
+      process.exit(0);
     }
     return;
   }
 
-  // Navigation & commands (no ctrl required)
+  // ── Backspace: delete from search ──
+  if (key.name === "backspace") {
+    if (searchQuery) {
+      searchQuery = searchQuery.slice(0, -1);
+      applyFilter();
+      cursor = 0;
+      refreshAll();
+      ensureVisible();
+    }
+    return;
+  }
+
+  // ── Ctrl combos ──
+  if (key.ctrl) {
+    switch (key.name) {
+      case "a":
+        toggleAllColumn(cursorCol);
+        for (const i of filteredIndices) updateRow(i);
+        ensureVisible();
+        return;
+      case "e": {
+        const idx = currentSkillIndex();
+        if (idx !== null) editSkill(idx);
+        return;
+      }
+      case "d": {
+        const idx = currentSkillIndex();
+        if (idx !== null) {
+          pendingDelete = idx;
+          setStatus(`delete ${allSkills[idx]}? (y to confirm)`, C.warning);
+        }
+        return;
+      }
+    }
+    return;
+  }
+
+  // ── Navigation & actions (arrow keys, enter, tab) ──
   switch (key.name) {
-    case "j":
     case "down":
       if (cursor < filteredIndices.length - 1) cursor++;
       break;
-    case "k":
     case "up":
       if (cursor > 0) cursor--;
       break;
-    case "h":
     case "left":
       cursorCol = "global";
       break;
-    case "l":
     case "right":
       cursorCol = "local";
       break;
@@ -590,30 +569,6 @@ renderer.keyInput.on("keypress", (key: KeyEvent) => {
     case "end":
       cursor = Math.max(0, filteredIndices.length - 1);
       break;
-    case "a":
-      if (!key.ctrl) break;
-      toggleAllColumn(cursorCol);
-      for (const i of filteredIndices) updateRow(i);
-      ensureVisible();
-      return;
-    case "e": {
-      const idx = currentSkillIndex();
-      if (idx === null) break;
-      editSkill(idx);
-      return;
-    }
-    case "d": {
-      const idx = currentSkillIndex();
-      if (idx === null) break;
-      pendingDelete = idx;
-      setStatus(`delete ${allSkills[idx]}? (y to confirm)`, C.warning);
-      break;
-    }
-    case "q":
-      renderer.destroy();
-      process.exit(0);
-      return;
-    case "space":
     case "return": {
       const idx = currentSkillIndex();
       if (idx === null) break;
@@ -645,6 +600,15 @@ renderer.keyInput.on("keypress", (key: KeyEvent) => {
       break;
     }
     default:
+      // ── Printable character → search input ──
+      if (key.sequence && key.sequence.length === 1 && !key.meta) {
+        searchQuery += key.sequence;
+        applyFilter();
+        cursor = 0;
+        refreshAll();
+        ensureVisible();
+        return;
+      }
       return;
   }
 
