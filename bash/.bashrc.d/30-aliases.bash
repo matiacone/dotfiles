@@ -25,9 +25,9 @@ alias pop='git stash pop'
 alias ma='gt modify -a && gt submit --no-interactive -p'
 alias ga='function _ca(){ gt create -am "$*" && gt submit --no-interactive -p; }; _ca'
 alias gtp='~/creations/scripts/gt-sync-poll'
-alias re='lumen diff develop..'
-alias res='lumen diff develop.. --stacked'
-alias red='lumen diff $(gt branch info --no-interactive 2>/dev/null | grep -o "Parent: .*" | sed "s/Parent: //")..'
+alias re='_ld develop..'
+alias res='_ld develop.. --stacked'
+alias red='_ld "$(gt branch info --no-interactive 2>/dev/null | grep -o "Parent: .*" | sed "s/Parent: //").."'
 alias devin-review='bunx devin-review "$(gh pr view --json url -q .url)"'
 
 # Bun

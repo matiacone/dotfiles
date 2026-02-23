@@ -287,7 +287,7 @@ const footerSep = new TextRenderable(renderer, {
 
 const footer = new TextRenderable(renderer, {
   id: "footer",
-  content: " / search  j/k move  h/l/tab col  enter toggle  a all  e edit  d delete  q quit",
+  content: " / search  j/k move  h/l/tab col  space/enter toggle  ^a all  e edit  d delete  q quit",
   fg: C.footer,
   height: 1,
 });
@@ -591,6 +591,7 @@ renderer.keyInput.on("keypress", (key: KeyEvent) => {
       cursor = Math.max(0, filteredIndices.length - 1);
       break;
     case "a":
+      if (!key.ctrl) break;
       toggleAllColumn(cursorCol);
       for (const i of filteredIndices) updateRow(i);
       ensureVisible();
@@ -612,6 +613,7 @@ renderer.keyInput.on("keypress", (key: KeyEvent) => {
       renderer.destroy();
       process.exit(0);
       return;
+    case "space":
     case "return": {
       const idx = currentSkillIndex();
       if (idx === null) break;
