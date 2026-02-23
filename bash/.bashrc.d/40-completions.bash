@@ -59,3 +59,9 @@ _ralph_completions() {
   [[ ${cword} -eq 1 ]] && COMPREPLY=( $(compgen -W "${commands}" -- "${cur}") )
 }
 complete -F _ralph_completions ralph
+
+# OpenClaw completion
+[[ -f ~/.openclaw/completions/openclaw.bash ]] && source ~/.openclaw/completions/openclaw.bash
+
+# sb sandbox CLI completion
+command -v sb &>/dev/null && eval "$(sb completions bash)"

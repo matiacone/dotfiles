@@ -34,6 +34,7 @@ alias devin-review='bunx devin-review "$(gh pr view --json url -q .url)"'
 alias run="bun run"
 alias cc="claude"
 alias oc="opencode"
+alias skl='bunx @dealdeploy/skl@latest'
 
 # SSH (uses env vars from .env)
 alias ssh-flow-ubuntu='ssh -i ~/.ssh/id_rsa_flow ubuntu@$SSH_FLOW_HOST'

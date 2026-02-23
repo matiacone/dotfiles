@@ -9,12 +9,3 @@ export PATH="$HOME/.npm-global/bin:$PATH"
 
 # Homebrew
 eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-
-# OpenClaw Completion
-[[ -f ~/.openclaw/completions/openclaw.bash ]] && source ~/.openclaw/completions/openclaw.bash
-
-# sb sandbox CLI
-command -v sb &>/dev/null && eval "$(sb completions bash)"
-
-# Skills manager
-alias skl='bun run ~/dotfiles/skl/index.ts'

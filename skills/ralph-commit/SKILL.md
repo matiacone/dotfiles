@@ -19,7 +19,7 @@ Commit changes to the feature branch.
 4. If NOT on the target branch:
    - Check if branch exists: `git branch --list "<branch-name>"`
    - If it EXISTS: `gt checkout <branch-name>`, then `gt add -A && gt modify --commit -m "<message>"`
-   - If it does NOT exist: `gt add -A && gt create <branch-name> -m "<message>"` (creates from current branch as parent)
+   - If it does NOT exist: `gt add -A && gt create --no-interactive <branch-name> -m "<message>"` (creates from current branch as parent)
 5. If already on the target branch:
    - `gt add -A && gt modify --commit -m "<message>"`
 6. Submit: `gt submit --no-interactive --publish`
