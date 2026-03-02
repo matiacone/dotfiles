@@ -1,5 +1,8 @@
 # External sources and completions base
-[[ -f ~/.local/share/omarchy/default/bash/rc ]] && source ~/.local/share/omarchy/default/bash/rc
+if [[ -z ${__OMARCHY_RC_LOADED+x} ]]; then
+  __OMARCHY_RC_LOADED=1
+  [[ -f ~/.local/share/omarchy/default/bash/rc ]] && source ~/.local/share/omarchy/default/bash/rc
+fi
 
 # Git completions (different paths on Linux vs Mac)
 if [[ -f /usr/share/bash-completion/completions/git ]]; then
