@@ -32,7 +32,7 @@ alias devin-review='bunx devin-review "$(gh pr view --json url -q .url)"'
 
 # Bun
 alias run="bun run"
-alias cc="claude"
+alias cc="claude --dangerously-skip-permissions"
 alias oc="opencode"
 alias skl='bunx @dealdeploy/skl@latest'
 

@@ -3,24 +3,53 @@ name: ralph-commit
 description: Commit changes to the appropriate branch (for ralph workflows)
 ---
 
-Commit changes to the feature branch.
+Commit your current changes using Graphite. You should already be on the correct base branch (via `/ralph-checkout`).
 
-**CRITICAL RULES:**
-- NEVER use `gt track` - that means you created the branch with raw git, which breaks the stack
-- NEVER checkout develop/main first - create the branch from your CURRENT position in the stack
-- The branch parent must be whatever branch you're currently on, NOT develop
+## Hard rules
 
-1. Determine the target branch name:
-   - If `plan.md` exists in the feature directory, read the **Branch** field from it
-   - **Artifact/feature issues** (title prefixed "XYZ: "): Use ONE branch for the entire feature (e.g., `ralph/search`). All issues under the same artifact share this branch — modify, don't create.
-   - **Standalone issues**: One branch per issue (e.g., `ralph/fix-login-bug`)
-2. Generate a commit message based on the task you completed
-3. Check current branch: `git branch --show-current`
-4. If NOT on the target branch:
-   - Check if branch exists: `git branch --list "<branch-name>"`
-   - If it EXISTS: `gt checkout <branch-name>`, then `gt add -A && gt modify --commit -m "<message>"`
-   - If it does NOT exist: `gt add -A && gt create --no-interactive <branch-name> -m "<message>"` (creates from current branch as parent)
-5. If already on the target branch:
-   - `gt add -A && gt modify --commit -m "<message>"`
-6. Submit: `gt submit --no-interactive --publish`
-7. Show `gt log short` to confirm the branch parent is correct (should NOT be develop unless you started on develop)
+- NEVER use `gt track` — if you need it, you created the branch wrong (with raw git)
+- NEVER use raw `git commit`, `git checkout -b`, or `git branch` to create branches — always use `gt`
+- Always make your code changes FIRST, then commit. Never create a branch with no changes.
+
+## Step 1: Decide — new branch or existing?
+
+Check your current branch: `git branch --show-current`
+
+### A) You're already on the correct branch for this task
+
+Your task's branch already exists and you're on it. Just add a new commit.
+
+```bash
+gt add -A && gt modify --commit -m "<message>"
+```
+
+### B) You need a NEW branch
+
+You're on develop (or a parent branch) and need to create a branch for this task.
+
+```bash
+gt add -A && gt create --no-interactive <branch-name> -m "<message>"
+```
+
+## Step 2: Determine the branch name
+
+- If `plan.md` exists in the feature directory, read the **Branch** field from it
+- **Artifact/feature issues** (title prefixed "XYZ: "): Use ONE branch for the entire feature (e.g., `ralph/search`). All issues under the same artifact share this branch — use situation (A), not (B).
+- **Standalone issues**: One branch per issue, kebab-case (e.g., `ralph/fix-login-bug`)
+
+## Step 3: Generate commit message
+
+Auto-generate a concise commit message in conventional commit format based on the diff. Do not ask the user.
+
+## Step 4: Submit
+
+```bash
+gt submit --no-interactive --publish
+```
+
+## Step 5: Verify
+
+Run `gt log short` and sanity-check:
+- Independent work should show develop as parent
+- Dependent/stacked work should show the branch it builds on as parent
+- If you see a 5+ branch stack of unrelated changes, something went wrong — `/ralph-checkout` should have sent you back to develop
