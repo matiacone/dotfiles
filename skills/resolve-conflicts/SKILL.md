@@ -9,10 +9,11 @@ description: Resolves merge conflicts across a Graphite stack during restacks. U
 
 Use this sequence for each conflicted branch in the stack:
 
-1. Run `gt restack`.
-2. Fix merge conflicts in files.
-3. Run `gt add -A && gt continue`.
-4. Repeat until Graphite reports no remaining conflicts.
+1. Run `gt ls` to list Graphite branches and identify which stack needs restacking.
+2. Run `gt restack`.
+3. Fix merge conflicts in files.
+4. Run `gt add -A && gt continue`.
+5. Repeat until Graphite reports no remaining conflicts.
 
 ## Workflows
 
@@ -35,16 +36,18 @@ Checklist:
 
 ### Resolve an entire stacked branch chain
 
-1. Run `gt restack` once.
-2. If conflicts appear, resolve the current branch.
-3. Run `gt add -A && gt continue`.
-4. Repeat resolve + continue for each subsequent conflicted branch.
-5. Finish only when stack is conflict free.
+1. Run `gt ls` to inspect Graphite branches and choose the stack to restack.
+2. Run `gt restack` once.
+3. If conflicts appear, resolve the current branch.
+4. Run `gt add -A && gt continue`.
+5. Repeat resolve + continue for each subsequent conflicted branch.
+6. Finish only when stack is conflict free.
 
 Checklist:
 - [ ] Every conflicted branch was resumed with `gt continue`
 - [ ] `gt restack` finishes without new conflicts
 - [ ] Final Git status is clean (or only expected local changes)
+- [ ] Relevant stack was identified from `gt ls`
 
 ## Advanced features
 
