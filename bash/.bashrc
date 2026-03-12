@@ -11,3 +11,6 @@ export PATH="$HOME/.npm-global/bin:$PATH"
 eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
 . "$HOME/.local/share/../bin/env"
+
+# OpenClaw Completion
+source "/home/mathew/.openclaw/completions/openclaw.bash"
