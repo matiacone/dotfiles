@@ -14,3 +14,6 @@ eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
 # OpenClaw Completion
 source "/home/mathew/.openclaw/completions/openclaw.bash"
+
+# The next line updates PATH for the Google Cloud SDK.
+if [ -f '/tmp/google-cloud-sdk/path.bash.inc' ]; then . '/tmp/google-cloud-sdk/path.bash.inc'; fi
