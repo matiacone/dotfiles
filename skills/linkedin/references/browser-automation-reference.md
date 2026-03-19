@@ -1,6 +1,6 @@
 # LinkedIn Browser Automation Reference
 
-Field-tested patterns and gotchas for automating LinkedIn via browser automation tools (agent-browser, Playwright MCP, Puppeteer, etc.).
+Field-tested patterns and gotchas for automating LinkedIn via browser automation tools.
 
 ## DOM & Selectors
 
@@ -37,9 +37,9 @@ JSON.stringify(
 JSEOF
 ```
 
-Then evaluate: `agent-browser --auto-connect eval "$(cat /tmp/extract.js)"`
+Then evaluate the file contents in the browser context using whatever tool is available.
 
-This works reliably regardless of the automation tool's quoting rules.
+This temp-file pattern works reliably regardless of the automation tool's quoting rules.
 
 ### Useful extraction patterns
 

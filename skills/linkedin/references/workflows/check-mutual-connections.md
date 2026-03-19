@@ -25,11 +25,17 @@ After the profile loads, find the mutual connections link — it reads something
 
 This opens a search results page filtered to the target with 1st-degree connections checked by default.
 
-## Step 4: Enable 2nd-Degree Filter
+## Step 4: Enable 2nd-Degree Filter FIRST
 
-On the search results page, find the 2nd-degree connection filter (a radio button or checkbox labeled "2nd"). Click it to include both 1st and 2nd degree connections.
+**Important: Enable 2nd degree before extracting any results.** This lets you collect all connections (1st and 2nd) in a single pass instead of paginating twice.
+
+On the search results page, find the 2nd-degree connection filter (a radio button or checkbox labeled "2nd"). Click it so both 1st and 2nd are checked simultaneously.
 
 Wait 2 seconds for results to reload.
+
+**Why this order matters:** The default search shows only 1st degree connections. If you extract 1st degree first and then add the 2nd degree filter, the results reshuffle completely — 1st degree connections reappear on later pages, causing duplicate work. Enabling both filters upfront avoids this.
+
+**Pagination warning:** LinkedIn dynamically expands page count as you go deeper. A search that initially shows 10 pages may grow to 15, 17, 18+ as you paginate. This is normal — keep going until "Next" disappears.
 
 ## Step 5: Extract Connections
 
@@ -37,7 +43,7 @@ For each page of results, extract:
 
 - **Name**
 - **LinkedIn profile URL** (the `/in/` link)
-- **Connection degree** (1st or 2nd — from "• 1st" or "• 2nd" text)
+- **Connection degree** (1st or 2nd — parse from `• 1st` or `• 2nd` in the link text)
 - **Title** (job title / headline)
 
 **Preferred: JavaScript evaluation** in the browser context:
@@ -45,11 +51,18 @@ For each page of results, extract:
 ```javascript
 JSON.stringify(
   Array.from(document.querySelectorAll('a[href*="/in/"]'))
-    .map(a => ({ name: a.textContent.trim().split('•')[0].trim(), url: a.href.split('?')[0] }))
-    .filter(a => a.url.includes('/in/') && !a.url.includes('/in/{target_slug}'))
+    .map(a => {
+      var text = a.textContent.trim().substring(0, 400);
+      var url = a.href.split('?')[0];
+      var degree = text.includes('2nd') ? '2nd' : text.includes('1st') ? '1st' : null;
+      return { text: text, url: url, degree: degree };
+    })
+    .filter(a => a.url.includes('/in/') && !a.url.includes('/in/{target_slug}') && a.degree)
     .reduce((acc, a) => { if (!acc.some(x => x.url === a.url)) acc.push(a); return acc; }, [])
 )
 ```
+
+This captures degree info from the link text in a single pass, so you don't need separate extraction logic per degree.
 
 **Fallback: Parse the accessibility tree / snapshot.** Each result entry contains name, degree, title, location. Profile URLs can be extracted by reading link hrefs.
 
@@ -57,7 +70,7 @@ JSON.stringify(
 
 Check for "Next" or page number buttons. If they exist, click "Next", wait 2 seconds, repeat step 5.
 
-Continue until no more pages.
+Continue until "Next" is absent. Note: LinkedIn may show up to 10 page buttons at a time — new ones appear as you advance, so don't assume the highest visible page number is the last.
 
 ## Step 7: Deduplicate, Format, and Output
 
