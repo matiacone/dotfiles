@@ -6,10 +6,11 @@ Send personalized LinkedIn connection requests by automating the browser, driven
 
 ## Startup Sequence (All Automatic)
 
-1. **Identify the current user.** Call `get_user_details` to get the authenticated user's `ownerId`. If this fails, stop.
-2. **Fetch HubSpot tasks.** Search for tasks owned by the current user with subject "connect on LinkedIn" or "Reach out on Linkedin", status NOT completed, due today or earlier.
-3. **Resolve contact details.** For each task, get the associated contact's LinkedIn URL (`hs_linkedin_url`), `firstname`, `lastname`, `company`, `jobtitle`.
-4. **Open the browser and go.**
+1. **Read [browser-automation-reference.md](browser-automation-reference.md).** This is mandatory — do not skip it. It contains DOM tips, selector patterns, and timing guidance that prevent known failures.
+2. **Identify the current user.** Call `get_user_details` to get the authenticated user's `ownerId`. If this fails, stop.
+3. **Fetch HubSpot tasks.** Search for tasks owned by the current user with subject "connect on LinkedIn" or "Reach out on Linkedin", status NOT completed, due today or earlier.
+4. **Resolve contact details.** For each task, get the associated contact's LinkedIn URL (`hs_linkedin_url`), `firstname`, `lastname`, `company`, `jobtitle`.
+5. **Open the browser and go.**
 
 ## Step 1: Fetch Tasks
 
@@ -70,10 +71,10 @@ Open the LinkedIn profile URL. Check the page loaded correctly.
 
 Look for action buttons on the profile:
 
-- **"Connect" visible** → proceed to send
-- **"Pending"** → already sent, skip
-- **"Message" (no Connect)** → already connected, skip
-- **No Connect found** → click "More actions" dropdown, check again. If still not found, log as failed.
+- **"Connect" visible** — proceed to send
+- **"Pending"** — already sent, skip
+- **"Message" (no Connect)** — already connected, skip
+- **No Connect found** — click "More actions" dropdown, check again. If still not found, log as failed.
 
 ### 4d. Send Connection Request
 

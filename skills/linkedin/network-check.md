@@ -10,25 +10,29 @@ Given a LinkedIn URL and target name, scrape all mutual 1st and 2nd degree conne
 
 If any input is missing, ask the user before proceeding.
 
-## Step 1: Navigate to the Profile
+## Step 1: Read Browser Reference
+
+Read [browser-automation-reference.md](browser-automation-reference.md) before any browser interaction. This is mandatory — it contains DOM tips, selector patterns, and timing guidance that prevent known failures.
+
+## Step 2: Navigate to the Profile
 
 Open the target's LinkedIn profile in the browser. The user must already be logged in.
 
 If the page shows a login wall, stop and tell the user.
 
-## Step 2: Open Mutual Connections
+## Step 3: Open Mutual Connections
 
 After the profile loads, find the mutual connections link — it reads something like "Sammy Abdullah, Mark Tornetta, and 11 other mutual connections". Click it.
 
 This opens a search results page filtered to the target with 1st-degree connections checked by default.
 
-## Step 3: Enable 2nd-Degree Filter
+## Step 4: Enable 2nd-Degree Filter
 
 On the search results page, find the 2nd-degree connection filter (a radio button or checkbox labeled "2nd"). Click it to include both 1st and 2nd degree connections.
 
 Wait 2 seconds for results to reload.
 
-## Step 4: Extract Connections
+## Step 5: Extract Connections
 
 For each page of results, extract:
 
@@ -50,17 +54,17 @@ JSON.stringify(
 
 **Fallback: Parse the accessibility tree / snapshot.** Each result entry contains name, degree, title, location. Profile URLs can be extracted by reading link hrefs.
 
-## Step 5: Paginate
+## Step 6: Paginate
 
 Check for "Next" or page number buttons. If they exist, click "Next", wait 2 seconds, repeat step 4.
 
 Continue until no more pages.
 
-## Step 6: Deduplicate and Format
+## Step 7: Deduplicate and Format
 
 Combine all pages. Deduplicate by LinkedIn URL. Sort: 1st degree first, then 2nd, alphabetical within each group.
 
-## Step 7: Post to Slack
+## Step 8: Post to Slack
 
 Use `mcp__slack__slack_post_message` to post results to the specified Slack channel. Use the **exact format** below — do not add extra fields like connection status.
 
@@ -89,7 +93,7 @@ Use `mcp__slack__slack_post_message` to post results to the specified Slack chan
 - Include LinkedIn URLs for every connection that has one
 - Split into multiple messages if over ~4000 chars
 
-If Slack MCP is not available, print results to terminal and suggest running the `setup-slack` workflow.
+If Slack MCP is not available, print results to terminal and suggest the user run the setup-slack workflow.
 
 ## Error Handling
 
