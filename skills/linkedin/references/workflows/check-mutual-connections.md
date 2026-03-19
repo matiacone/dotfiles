@@ -1,18 +1,17 @@
-# Network Check Workflow
+# Check Mutual Connections
 
-Given a LinkedIn URL and target name, scrape all mutual 1st and 2nd degree connections, then post a structured list to a Slack channel for review.
+Given a LinkedIn URL and target name, scrape all mutual 1st and 2nd degree connections.
 
 ## Inputs
 
 1. **LinkedIn URL** — target's profile URL (e.g. `https://www.linkedin.com/in/joshsokol`)
 2. **Target name** — the person's name (e.g. "Josh Sokol")
-3. **Slack channel** — channel name to post results (e.g. `#deal-flow`)
 
 If any input is missing, ask the user before proceeding.
 
 ## Step 1: Read Browser Reference
 
-Read [browser-automation-reference.md](browser-automation-reference.md) before any browser interaction. This is mandatory — it contains DOM tips, selector patterns, and timing guidance that prevent known failures.
+Read [../browser-automation-reference.md](../browser-automation-reference.md) before any browser interaction. This is mandatory — it contains DOM tips, selector patterns, and timing guidance that prevent known failures.
 
 ## Step 2: Navigate to the Profile
 
@@ -56,19 +55,15 @@ JSON.stringify(
 
 ## Step 6: Paginate
 
-Check for "Next" or page number buttons. If they exist, click "Next", wait 2 seconds, repeat step 4.
+Check for "Next" or page number buttons. If they exist, click "Next", wait 2 seconds, repeat step 5.
 
 Continue until no more pages.
 
-## Step 7: Deduplicate and Format
+## Step 7: Deduplicate, Format, and Output
 
 Combine all pages. Deduplicate by LinkedIn URL. Sort: 1st degree first, then 2nd, alphabetical within each group.
 
-## Step 8: Post to Slack
-
-Use `mcp__slack__slack_post_message` to post results to the specified Slack channel. Use the **exact format** below — do not add extra fields like connection status.
-
-### Slack Message Format
+### Output Format
 
 ```
 *{Target Name}*
@@ -91,14 +86,11 @@ Use `mcp__slack__slack_post_message` to post results to the specified Slack chan
 - For 2nd degree connections, append `(via {mutual name} + {N} other mutuals)` if mutual connection info is available from the search results
 - Do NOT include a status line (e.g. "Connect button available") — just the connections
 - Include LinkedIn URLs for every connection that has one
-- Split into multiple messages if over ~4000 chars
-
-If Slack MCP is not available, print results to terminal and suggest the user run the setup-slack workflow.
+- Keep messages under ~4000 chars; split into multiple if needed
 
 ## Error Handling
 
 - **Login wall** — stop, tell user to log in
 - **No mutual connections link** — target may have restricted visibility, inform user
-- **Empty results** — report "No mutual connections found", still post to Slack
-- **Slack MCP unavailable** — print to terminal, suggest setup-slack
+- **Empty results** — report "No mutual connections found"
 - **Rate limit / CAPTCHA** — stop immediately, alert user
